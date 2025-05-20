@@ -3,35 +3,50 @@
 This notebook explores and compares **Multi-Task Learning (MTL)** and **Single-Task Learning (STL)** approaches for binary image classification using a derivative of the MNIST dataset. The project investigates different parameter sharing mechanisms within simplified Multi-Layer Perceptron (MLP) architectures.
 
 -----
+Capisco\! La "Table of Contents" deve puntare ai titoli all'interno dello stesso file README, non a ricerche su Google. Questo è un errore comune quando si copia e incolla o si usano strumenti che generano URL esterni.
+
+Per creare link interni in Markdown (per GitHub), si usa la seguente sintassi:
+
+`[Testo del link](#nome-del-titolo-in-minuscolo-e-trattini)`
+
+GitHub converte automaticamente i titoli (`## Il Mio Titolo`) in ancore HTML (`#il-mio-titolo`).
+Devi solo assicurarti che il testo del titolo nell'URL sia:
+
+  * Tutto in minuscolo.
+  * Con gli spazi sostituiti da trattini (`-`).
+  * Con i caratteri speciali (come `?` o `:` o `(` o `)`) rimossi.
+
+Ecco la tua "Table of Contents" corretta con i riferimenti interni al README:
+
+-----
 
 ## Table of Contents
 
-  * [Tasks](https://www.google.com/search?q=%23tasks)
-  * [Learning Approaches Explored](https://www.google.com/search?q=%23learning-approaches-explored)
-  * [Objectives](https://www.google.com/search?q=%23objectives)
-  * [Libraries Used](https://www.google.com/search?q=%23libraries-used)
-  * [Setup and Configuration](https://www.google.com/search?q=%23setup-and-configuration)
-      * [Reproducibility](https://www.google.com/search?q=%23reproducibility)
-      * [Device Selection](https://www.google.com/search?q=%23device-selection)
-  * [Data Loading and Preprocessing](https://www.google.com/search?q=%23data-loading-and-preprocessing)
-      * [MNIST Dataset and Task Definitions](https://www.google.com/search?q=%23mnist-dataset-and-task-definitions)
-      * [Data Normalization](https://www.google.com/search?q=%23data-normalization)
-      * [Custom Dataset Class](https://www.google.com/search?q=%23custom-dataset-class)
-      * [DataLoaders](https://www.google.com/search?q=%23dataloaders)
-  * [Model Architectures](https://www.google.com/search?q=%23model-architectures)
-      * [MLP Base Architecture](https://www.google.com/search?q=%23mlp-base-architecture)
-      * [Hard Parameter Sharing MTL](https://www.google.com/search?q=%23hard-parameter-sharing-mtl)
-      * [Soft Parameter Sharing MTL (Cross-Stitch Networks)](https://www.google.com/search?q=%23soft-parameter-sharing-mtl-cross-stitch-networks)
-      * [Single-Task Learning](https://www.google.com/search?q=%23single-task-learning)
-  * [Utility Functions](https://www.google.com/search?q=%23utility-functions)
-  * [Training and Evaluation](https://www.google.com/search?q=%23training-and-evaluation)
-  * [Results and Discussion](https://www.google.com/search?q=%23results-and-discussion)
-      * [Training Progress Visualization](https://www.google.com/search?q=%23training-progress-visualization)
-      * [Final Test Set Performance Summary](https://www.google.com/search?q=%23final-test-set-performance-summary)
-      * [Interpretation of Results](https://www.google.com/search?q=%23interpretation-of-results)
-  * [Conclusion](https://www.google.com/search?q=%23conclusion)
-  * [License](https://www.google.com/search?q=%23license)
-
+* [Tasks](#tasks)
+* [Learning Approaches Explored](#learning-approaches-explored)
+* [Objectives](#objectives)
+* [Libraries Used](#libraries-used)
+* [Setup and Configuration](#setup-and-configuration)
+    * [Reproducibility](#reproducibility)
+    * [Device Selection](#device-selection)
+* [Data Loading and Preprocessing](#data-loading-and-preprocessing)
+    * [MNIST Dataset and Task Definitions](#mnist-dataset-and-task-definitions)
+    * [Data Normalization](#data-normalization)
+    * [Custom Dataset Class](#custom-dataset-class)
+    * [DataLoaders](#dataloaders)
+* [Model Architectures](#model-architectures)
+    * [MLP Base Architecture](#mlp-base-architecture)
+    * [Hard Parameter Sharing MTL](#hard-parameter-sharing-mtl)
+    * [Soft Parameter Sharing MTL (Cross-Stitch Networks)](#soft-parameter-sharing-mtl-cross-stitch-networks)
+    * [Single-Task Learning](#single-task-learning)
+* [Utility Functions](#utility-functions)
+* [Training and Evaluation](#training-and-evaluation)
+* [Results and Discussion](#results-and-discussion)
+    * [Training Progress Visualization](#training-progress-visualization)
+    * [Final Test Set Performance Summary](#final-test-set-performance-summary)
+    * [Interpretation of Results](#interpretation-of-results)
+* [Conclusion](#conclusion)
+* [License](#license)
 -----
 
 ## Tasks
