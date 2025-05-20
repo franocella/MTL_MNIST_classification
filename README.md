@@ -1,85 +1,81 @@
 # Multi-Task Learning (MTL) vs. Single-Task Learning (STL) for MNIST-derived Binary Classification
 
-This notebook explores and compares Multi-Task Learning (MTL) and Single-Task Learning (STL) approaches for binary image classification using a derivative of the MNIST dataset. The project investigates different parameter sharing mechanisms within simplified Multi-Layer Perceptron (MLP) architectures.
+This notebook explores and compares **Multi-Task Learning (MTL)** and **Single-Task Learning (STL)** approaches for binary image classification using a derivative of the MNIST dataset. The project investigates different parameter sharing mechanisms within simplified Multi-Layer Perceptron (MLP) architectures.
+
+-----
 
 ## Table of Contents
 
-* [Tasks](#tasks)
-* [Learning Approaches Explored](#learning-approaches-explored)
-* [Objectives](#objectives)
-* [Libraries Used](#libraries-used)
-* [Setup and Configuration](#setup-and-configuration)
-    * [Reproducibility](#reproducibility)
-    * [Device Selection](#device-selection)
-* [Data Loading and Preprocessing](#data-loading-and-preprocessing)
-    * [MNIST Dataset and Task Definitions](#mnist-dataset-and-task-definitions)
-    * [Data Normalization](#data-normalization)
-    * [Custom Dataset Class](#custom-dataset-class)
-    * [DataLoaders](#dataloaders)
-* [Model Architectures](#model-architectures)
-    * [MLP Base Architecture](#mlp-base-architecture)
-    * [Hard Parameter Sharing MTL](#hard-parameter-sharing-mtl)
-    * [Soft Parameter Sharing MTL (Cross-Stitch Networks)](#soft-parameter-sharing-mtl-cross-stitch-networks)
-    * [Single-Task Learning](#single-task-learning)
-* [Utility Functions](#utility-functions)
-* [Training and Evaluation](#training-and-evaluation)
-* [Results and Discussion](#results-and-discussion)
-    * [Training Progress Visualization](#training-progress-visualization)
-    * [Final Test Set Performance Summary](#final-test-set-performance-summary)
-    * [Interpretation of Results](#interpretation-of-results)
-* [Conclusion](#conclusion)
-* [License](#license)
+  * [Tasks](https://www.google.com/search?q=%23tasks)
+  * [Learning Approaches Explored](https://www.google.com/search?q=%23learning-approaches-explored)
+  * [Objectives](https://www.google.com/search?q=%23objectives)
+  * [Libraries Used](https://www.google.com/search?q=%23libraries-used)
+  * [Setup and Configuration](https://www.google.com/search?q=%23setup-and-configuration)
+      * [Reproducibility](https://www.google.com/search?q=%23reproducibility)
+      * [Device Selection](https://www.google.com/search?q=%23device-selection)
+  * [Data Loading and Preprocessing](https://www.google.com/search?q=%23data-loading-and-preprocessing)
+      * [MNIST Dataset and Task Definitions](https://www.google.com/search?q=%23mnist-dataset-and-task-definitions)
+      * [Data Normalization](https://www.google.com/search?q=%23data-normalization)
+      * [Custom Dataset Class](https://www.google.com/search?q=%23custom-dataset-class)
+      * [DataLoaders](https://www.google.com/search?q=%23dataloaders)
+  * [Model Architectures](https://www.google.com/search?q=%23model-architectures)
+      * [MLP Base Architecture](https://www.google.com/search?q=%23mlp-base-architecture)
+      * [Hard Parameter Sharing MTL](https://www.google.com/search?q=%23hard-parameter-sharing-mtl)
+      * [Soft Parameter Sharing MTL (Cross-Stitch Networks)](https://www.google.com/search?q=%23soft-parameter-sharing-mtl-cross-stitch-networks)
+      * [Single-Task Learning](https://www.google.com/search?q=%23single-task-learning)
+  * [Utility Functions](https://www.google.com/search?q=%23utility-functions)
+  * [Training and Evaluation](https://www.google.com/search?q=%23training-and-evaluation)
+  * [Results and Discussion](https://www.google.com/search?q=%23results-and-discussion)
+      * [Training Progress Visualization](https://www.google.com/search?q=%23training-progress-visualization)
+      * [Final Test Set Performance Summary](https://www.google.com/search?q=%23final-test-set-performance-summary)
+      * [Interpretation of Results](https://www.google.com/search?q=%23interpretation-of-results)
+  * [Conclusion](https://www.google.com/search?q=%23conclusion)
+  * [License](https://www.google.com/search?q=%23license)
 
----
+-----
 
 ## Tasks
 
 Two distinct binary classification tasks are defined based on the MNIST dataset:
 
-* **Task 1: Is Even?** Classify digits as "even" (1) or "odd" (0).
-* **Task 2: Is Multiple of 3?** Classify digits as "multiple of 3 and not 0".
+  * **Task 1: Is Even?** Classify digits as "even" (1) or "odd" (0).
+  * **Task 2: Is Multiple of 3?** Classify digits as "multiple of 3 and not 0".
 
----
+-----
 
 ## Learning Approaches Explored
 
 The notebook implements and compares three main learning strategies:
 
-* **Hard Parameter Sharing MTL:** A single MLP network with shared hidden layers (feature extractor) and task-specific output heads (classifiers) for each task.
+  * **Hard Parameter Sharing MTL:** A single MLP network with **shared hidden layers** (acting as a feature extractor) and **task-specific output heads** (classifiers) for each task.
 
-* **Soft Parameter Sharing MTL (Cross-Stitch Networks):** Two separate MLP networks (one for each task) with `CrossStitchUnit`s. These units allow for learned linear combinations of feature maps at intermediate layers, providing a more flexible way of sharing information between tasks. The combined activations $\tilde{x}_A^l, \tilde{x}_B^l$ are calculated as:
+  * **Soft Parameter Sharing MTL (Cross-Stitch Networks):** Two separate MLP networks (one for each task) are used, but they incorporate `CrossStitchUnit`s. These units are placed at intermediate layers and learn to combine feature maps between the two tasks. Essentially, the activation of a layer for one task becomes a **learned linear combination** of its own activation and the activation of the corresponding layer from the other task. This allows for a flexible way of sharing information, where the model learns *how much* information to share. The scalar coefficients for these combinations are initialized to behave like an identity matrix and are adjusted during training.
 
-    $$
-    \begin{pmatrix} \tilde{x}_A^l \\ \tilde{x}_B^l \end{pmatrix} = \begin{pmatrix} \alpha_{AA} & \alpha_{AB} \\ \alpha_{BA} & \alpha_{BB} \end{pmatrix} \begin{pmatrix} x_A^l \\ x_B^l \end{pmatrix}
-    $$
+  * **Single-Task Learning (STL):** Two separate MLP networks, one for each task, are trained **independently** with no parameter sharing. This serves as a baseline for comparison.
 
-    where $\alpha_{AA}, \alpha_{AB}, \alpha_{BA}, \alpha_{BB}$ are learned scalars. These parameters are initialized as an identity matrix `torch.eye(2, 2)` and learned during training.
-
-* **Single-Task Learning (STL):** Two separate MLP networks, one for each task, trained independently with no parameter sharing. This serves as a baseline.
-
----
+-----
 
 ## Objectives
 
-* Implement 2 Multi-Task learning techniques:
-    * Hard parameter sharing
-    * Soft parameter sharing (Cross-Stitch Networks)
-* Compare the performance of MTL approaches against independent single-task models.
-* Analyze the trade-offs in terms of model complexity (parameter count), computational cost (training and inference time), and task performance.
+  * Implement 2 Multi-Task learning techniques:
+      * Hard parameter sharing
+      * Soft parameter sharing (Cross-Stitch Networks)
+  * Compare the performance of MTL approaches against independent single-task models.
+  * Analyze the trade-offs in terms of **model complexity** (parameter count), **computational cost** (training and inference time), and **task performance**.
 
----
+-----
 
 ## Libraries Used
 
-* **PyTorch & Torchvision:** For building and training neural networks, loading the MNIST dataset, and applying image transformations.
-* **NumPy:** For numerical operations.
-* **Matplotlib & Seaborn:** For plotting training results and confusion matrices.
-* **Pandas:** For creating and managing DataFrames to summarize results.
-* **Scikit-learn:** For calculating evaluation metrics like precision, recall, F1-score, and confusion matrices.
-* **Time:** For measuring training and inference durations.
-* **OS/JSON:** For saving model states and results summaries.
+  * **PyTorch & Torchvision:** For building and training neural networks, loading the MNIST dataset, and applying image transformations.
+  * **NumPy:** For numerical operations.
+  * **Matplotlib & Seaborn:** For plotting training results and confusion matrices.
+  * **Pandas:** For creating and managing DataFrames to summarize results.
+  * **Scikit-learn:** For calculating evaluation metrics like precision, recall, F1-score, and confusion matrices.
+  * **Time:** For measuring training and inference durations.
+  * **OS/JSON:** For saving model states and results summaries.
 
----
+-----
 
 ## Setup and Configuration
 
@@ -87,10 +83,10 @@ The notebook implements and compares three main learning strategies:
 
 The notebook automatically selects the best available computation device:
 
-* CUDA GPU (`torch.device('cuda')`) if available.
-* CPU (`torch.device('cpu')`) otherwise.
+  * **CUDA GPU** (`torch.device('cuda')`) if available.
+  * **CPU** (`torch.device('cpu')`) otherwise.
 
----
+-----
 
 ## Data Loading and Preprocessing
 
@@ -102,16 +98,16 @@ The standard MNIST dataset, consisting of grayscale 28x28 pixel images of handwr
 
 Images are converted to PyTorch tensors and then normalized using pre-calculated MNIST mean and standard deviation:
 
-* Mean: `0.1307`
-* Standard Deviation: `0.3081`
+  * **Mean:** `0.1307`
+  * **Standard Deviation:** `0.3081`
 
 ### Custom Dataset Class
 
 A custom PyTorch `Dataset` class, `MNISTMultiTask`, wraps the original MNIST dataset. Its `__getitem__` method is overridden to return:
 
-* The transformed image.
-* The binary label for "Is Even?".
-* The binary label for "Is Multiple of 3?".
+  * The transformed image.
+  * The binary label for "Is Even?".
+  * The binary label for "Is Multiple of 3?".
 
 This setup allows a single dataset instance to provide data for both tasks simultaneously, which is essential for MTL.
 
@@ -119,10 +115,10 @@ This setup allows a single dataset instance to provide data for both tasks simul
 
 PyTorch `DataLoader` instances are created for both training and testing datasets using a `BATCH_SIZE = 128`.
 
-* `train_loader` shuffles the data at each epoch.
-* `test_loader` does not shuffle the data for consistent evaluation.
+  * `train_loader` shuffles the data at each epoch.
+  * `test_loader` does not shuffle the data for consistent evaluation.
 
----
+-----
 
 ## Model Architectures
 
@@ -132,25 +128,25 @@ All MLP backbones (shared or task-specific) consist of **two hidden layers**.
 
 The foundational MLP structure, used in both STL and as the building block for MTL models, includes:
 
-* An input layer to flatten the 28x28 image (784 features).
-* Two hidden layers with ReLU activation (sizes `[64, 32]`).
-* An output layer for binary classification (1 logit).
+  * An input layer to flatten the 28x28 image (784 features).
+  * Two hidden layers with ReLU activation (sizes `[64, 32]`).
+  * An output layer for binary classification (1 logit).
 
 ### Hard Parameter Sharing MTL
 
 **Architecture:**
 
-* A shared backbone comprising the flattened input layer and the two hidden layers with ReLU activations.
-* Two task-specific output heads, one for each binary task, connected to the shared backbone's output.
+  * A shared backbone comprising the flattened input layer and the two hidden layers with ReLU activations.
+  * Two task-specific output heads, one for each binary task, connected to the shared backbone's output.
 
-**Total Parameters:** 52,386. This is significantly less than the sum of STL models, highlighting parameter efficiency.
+**Total Parameters:** 52,386. This is significantly less than the sum of STL models, highlighting **parameter efficiency**.
 
 ### Soft Parameter Sharing MTL (Cross-Stitch Networks)
 
 **Architecture:**
 
-* Two separate MLP pathways, one for each task, each containing the input layer and two hidden layers with ReLU activations.
-* `CrossStitchUnit` modules are placed after the ReLU activation of each hidden layer in both pathways. These units learn to combine feature maps from corresponding layers across the two task pathways.
+  * Two separate MLP pathways, one for each task, each containing the input layer and two hidden layers with ReLU activations.
+  * `CrossStitchUnit` modules are placed after the ReLU activation of each hidden layer in both pathways. These units learn to combine feature maps from corresponding layers across the two task pathways.
 
 **Total Parameters:** 104,714. This is slightly more than the sum of STL models due to the added `CrossStitchUnit` parameters.
 
@@ -158,33 +154,34 @@ The foundational MLP structure, used in both STL and as the building block for M
 
 **Architecture:**
 
-* A completely separate MLP model is trained for each task. Each model has its own input layer, two hidden layers with ReLU activations, and a task-specific output layer.
+  * A completely separate MLP model is trained for each task. Each model has its own input layer, two hidden layers with ReLU activations, and a task-specific output layer.
 
 **Total Parameters:**
-* Even-only Single-Task Model: 52,353
-* MultipleOf3-only Single-Task Model: 52,353
-* Sum of Single-Task Model Parameters: 104,706
 
----
+  * Even-only Single-Task Model: 52,353
+  * MultipleOf3-only Single-Task Model: 52,353
+  * Sum of Single-Task Model Parameters: 104,706
+
+-----
 
 ## Utility Functions
 
-* `count_parameters(model)`: Calculates the total number of trainable parameters in a PyTorch model.
-* `get_test_accuracy(model, loader, device, task_type)`: Evaluates a model's accuracy on the test set. For MTL models, it returns individual task accuracies and their average.
+  * `count_parameters(model)`: Calculates the total number of trainable parameters in a PyTorch model.
+  * `get_test_accuracy(model, loader, device, task_type)`: Evaluates a model's accuracy on the test set. For MTL models, it returns individual task accuracies and their average.
 
----
+-----
 
 ## Training and Evaluation
 
 For each model type (STL Even, STL MultipleOf3, HardShareMTL, CrossStitchMTL):
 
-* **Initialization:** Model, `BCEWithLogitsLoss` (for binary classification), and Adam optimizer (with `lr=0.001`) are initialized.
-* **Training Loop:** Models are trained for `num_epochs = 25`. In each epoch, the model is trained on the training set and periodically evaluated on the test set.
-* **Early Stopping/Best Model Saving:** The model weights that achieve the best test accuracy (or average test accuracy for MTL models) are saved.
-* **Metrics Recording:** Training losses and test accuracies for each task are recorded per epoch for later visualization.
-* **Final Testing:** The best saved model is loaded and evaluated on the test set to report final metrics.
+  * **Initialization:** Model, `BCEWithLogitsLoss` (for binary classification), and Adam optimizer (with `lr=0.001`) are initialized.
+  * **Training Loop:** Models are trained for `num_epochs = 25`. In each epoch, the model is trained on the training set and periodically evaluated on the test set.
+  * **Early Stopping/Best Model Saving:** The model weights that achieve the best test accuracy (or average test accuracy for MTL models) are saved.
+  * **Metrics Recording:** Training losses and test accuracies for each task are recorded per epoch for later visualization.
+  * **Final Testing:** The best saved model is loaded and evaluated on the test set to report final metrics.
 
----
+-----
 
 ## Results and Discussion
 
@@ -192,9 +189,9 @@ For each model type (STL Even, STL MultipleOf3, HardShareMTL, CrossStitchMTL):
 
 Plots are generated for each model, showing:
 
-* Training Loss vs. Epoch (for all models).
-* Test Accuracy vs. Epoch for Each Task and Model Type (individual task accuracies for all models).
-* Comparison of Average Test Accuracy: STL vs. Hard Sharing vs. Cross-Stitch (average accuracies across epochs).
+  * Training Loss vs. Epoch (for all models).
+  * Test Accuracy vs. Epoch for Each Task and Model Type (individual task accuracies for all models).
+  * Comparison of Average Test Accuracy: STL vs. Hard Sharing vs. Cross-Stitch (average accuracies across epochs).
 
 These plots help in analyzing training dynamics, convergence, and potential overfitting.
 
@@ -210,14 +207,14 @@ These plots help in analyzing training dynamics, convergence, and potential over
 
 Based on the provided data for this introductory example:
 
-* **Parameter Efficiency:** The **Hard Sharing MTL** model (52,386 parameters) demonstrates significant parameter efficiency, requiring roughly half the parameters of the **Single-Task** models (104,706 total parameters) and the **Cross-Stitch MTL** model (104,714 parameters). This is a major advantage for deployment on resource-constrained devices.
-* **Training Time:** Both MTL approaches show considerable training time reduction. **Hard Sharing MTL** completed training in 393.25 seconds, and **Cross-Stitch MTL** in 425.95 seconds, which is roughly half the time compared to training two independent **Single-Task** models (771.1 seconds combined). This highlights the computational benefit of joint training.
-* **Performance:**
-    * The **Cross-Stitch MTL** model achieved the highest average accuracy (98.64%), slightly outperforming **Single-Task** (98.51%) and **Hard Sharing MTL** (98.44%). This suggests that for these tasks, the learned flexible sharing of Cross-Stitch might offer a minor edge in combined performance.
-    * The performance difference across all three approaches in terms of average accuracy is very small (less than 0.2%). This indicates that for these specific, relatively simple, and likely highly correlated binary classification tasks on MNIST, all methods are quite effective.
-    * This example does not show significant "negative transfer" (where MTL negatively impacts one task's performance), which is positive.
+  * **Parameter Efficiency:** The **Hard Sharing MTL** model (52,386 parameters) demonstrates significant parameter efficiency, requiring roughly half the parameters of the **Single-Task** models (104,706 total parameters) and the **Cross-Stitch MTL** model (104,714 parameters). This is a major advantage for deployment on resource-constrained devices.
+  * **Training Time:** Both MTL approaches show considerable training time reduction. **Hard Sharing MTL** completed training in 393.25 seconds, and **Cross-Stitch MTL** in 425.95 seconds, which is roughly half the time compared to training two independent **Single-Task** models (771.1 seconds combined). This highlights the computational benefit of joint training.
+  * **Performance:**
+      * The **Cross-Stitch MTL** model achieved the highest average accuracy (98.64%), slightly outperforming **Single-Task** (98.51%) and **Hard Sharing MTL** (98.44%). This suggests that for these tasks, the learned flexible sharing of Cross-Stitch might offer a minor edge in combined performance.
+      * The performance difference across all three approaches in terms of average accuracy is very small (less than 0.2%). This indicates that for these specific, relatively simple, and likely highly correlated binary classification tasks on MNIST, all methods are quite effective.
+      * This example does not show significant "negative transfer" (where MTL negatively impacts one task's performance), which is positive.
 
----
+-----
 
 ## Conclusion
 
@@ -225,11 +222,11 @@ This notebook provides an introductory implementation and comparative analysis o
 
 The key takeaways are:
 
-* **Efficiency:** MTL, especially with Hard Parameter Sharing, offers substantial advantages in terms of parameter efficiency and reduced training time.
-* **Performance:** While all methods achieved high accuracy for these tasks, Soft Parameter Sharing (Cross-Stitch) showed a slight advantage in average accuracy, indicating its potential for more nuanced information sharing.
-* **Margin for Improvement:** This is an introductory example. Multi-Task Learning is a promising field, and there is significant room for improvement and further exploration. This includes experimenting with more complex architectures, diverse datasets, different task relationships, advanced loss weighting schemes, and exploring the learned $\alpha$ values in Cross-Stitch units to understand information flow.
+  * **Efficiency:** MTL, especially with Hard Parameter Sharing, offers substantial advantages in terms of parameter efficiency and reduced training time.
+  * **Performance:** While all methods achieved high accuracy for these tasks, Soft Parameter Sharing (Cross-Stitch) showed a slight advantage in average accuracy, indicating its potential for more nuanced information sharing.
+  * **Margin for Improvement:** This is an introductory example. Multi-Task Learning is a promising field, and there is significant room for improvement and further exploration. This includes experimenting with more complex architectures, diverse datasets, different task relationships, advanced loss weighting schemes, and exploring the learned alpha values in Cross-Stitch units to understand information flow.
 
----
+-----
 
 ## License
 
