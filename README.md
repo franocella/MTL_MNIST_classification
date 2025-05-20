@@ -2,24 +2,6 @@
 
 This notebook explores and compares **Multi-Task Learning (MTL)** and **Single-Task Learning (STL)** approaches for binary image classification using a derivative of the MNIST dataset. The project investigates different parameter sharing mechanisms within simplified Multi-Layer Perceptron (MLP) architectures.
 
------
-Capisco\! La "Table of Contents" deve puntare ai titoli all'interno dello stesso file README, non a ricerche su Google. Questo è un errore comune quando si copia e incolla o si usano strumenti che generano URL esterni.
-
-Per creare link interni in Markdown (per GitHub), si usa la seguente sintassi:
-
-`[Testo del link](#nome-del-titolo-in-minuscolo-e-trattini)`
-
-GitHub converte automaticamente i titoli (`## Il Mio Titolo`) in ancore HTML (`#il-mio-titolo`).
-Devi solo assicurarti che il testo del titolo nell'URL sia:
-
-  * Tutto in minuscolo.
-  * Con gli spazi sostituiti da trattini (`-`).
-  * Con i caratteri speciali (come `?` o `:` o `(` o `)`) rimossi.
-
-Ecco la tua "Table of Contents" corretta con i riferimenti interni al README:
-
------
-
 ## Table of Contents
 
 * [Tasks](#tasks)
