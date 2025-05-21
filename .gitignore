@@ -1,0 +1,4 @@
+*.pth
+*ubyte
+*.gz
+mtl_digits_old.ipynb
